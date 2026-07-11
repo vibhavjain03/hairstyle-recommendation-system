@@ -1,16 +1,34 @@
-# React + Vite
+# AI-Powered Hairstyle Recommendation System 💇‍♂️🤖
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+An intelligent Computer Vision application utilizing deep learning facial landmark detection to classify human face shapes and recommend optimized, stylistically compatible hairstyles.
 
-Currently, two official plugins are available:
+## 🚀 Key Features
+* **Facial Topology Extraction:** Real-time extraction of structural facial coordinates to compute jawline-to-forehead dimensions.
+* **Geometrical Classification Engine:** Algorithmic categorization of geometry into core face shapes (Oval, Round, Square, Heart, Oblong).
+* **Automated Recommendation Layer:** A filtered matching matrix providing tailored hair and grooming options based on structural contours.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## 🛠️ Tech Stack & Models
+```text
+[Image Input] ───> [Facial Landmark Classifier] ───> [Face Shape Evaluator] ───> [Style Matrix]
+```
+* **Core Language:** Python / JavaScript
+* **Vision & Processing Frameworks:** OpenCV, MediaPipe / Face Landmarks Engine
+* **UI Infrastructure:** Interactive Web Preview Matrix
 
-## React Compiler
+## 📦 Quick Installation
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+1. **Clone and Navigate:**
+   ```bash
+   git clone https://github.com
+   cd hairstyle-recommendation-system
+   ```
 
-## Expanding the ESLint configuration
+2. **Install Local Project Modules:**
+   ```bash
+   npm install
+   ```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+3. **Launch the Engine:**
+   ```bash
+   npm run dev
+   ```
