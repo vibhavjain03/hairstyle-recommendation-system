@@ -23,7 +23,7 @@ export const Dropzone = ({ onImageUpload }) => {
       const file = e.dataTransfer.files[0];
       if (file.type.startsWith('image/')) {
         const imageUrl = URL.createObjectURL(file);
-        onImageUpload(imageUrl);
+        onImageUpload(imageUrl, file);
       }
     }
   }, [onImageUpload]);
@@ -33,7 +33,7 @@ export const Dropzone = ({ onImageUpload }) => {
       const file = e.target.files[0];
       if (file.type.startsWith('image/')) {
         const imageUrl = URL.createObjectURL(file);
-        onImageUpload(imageUrl);
+        onImageUpload(imageUrl, file);
       }
     }
   };
@@ -61,7 +61,7 @@ export const Dropzone = ({ onImageUpload }) => {
         <p className="mb-2 text-lg font-medium text-gray-200">
           <span className="text-primary font-semibold">Click to upload</span> or drag and drop
         </p>
-        <p className="text-sm text-gray-500">SVG, PNG, JPG or WEBP (max. 800x400px)</p>
+        <p className="text-sm text-gray-500">SVG, PNG, JPG or WEBP (max. 10MB)</p>
       </div>
     </div>
   );

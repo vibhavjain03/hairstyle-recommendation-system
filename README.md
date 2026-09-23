@@ -1,34 +1,76 @@
-# AI-Powered Hairstyle Recommendation System 💇‍♂️🤖
+# AestheticAI — Full-Stack Hairstyle Recommendation System 💇‍♂️🤖
 
-An intelligent Computer Vision application utilizing deep learning facial landmark detection to classify human face shapes and recommend optimized, stylistically compatible hairstyles.
+An intelligent, full-stack biometric application utilizing client-side TensorFlow.js deep learning (`@vladmandic/face-api`) for real-time 68-point facial landmark extraction, coupled with a Node.js + Express + MongoDB backend engine for dynamic hairstyle recommendation catalog matching, JWT authentication, user scan history, and recommendation feedback.
+
+---
 
 ## 🚀 Key Features
-* **Facial Topology Extraction:** Real-time extraction of structural facial coordinates to compute jawline-to-forehead dimensions.
-* **Geometrical Classification Engine:** Algorithmic categorization of geometry into core face shapes (Oval, Round, Square, Heart, Oblong).
-* **Automated Recommendation Layer:** A filtered matching matrix providing tailored hair and grooming options based on structural contours.
 
-## 🛠️ Tech Stack & Models
+* **In-Browser Facial Topology Extraction:** Client-side 68-point neural network mapping (`TinyFaceDetector` & `Landmark68Net`) ensuring privacy and instantaneous landmark analysis.
+* **Full-Stack Database Architecture:** MongoDB collection matrix housing curated hairstyle catalogs across face shapes (`Oval`, `Round`, `Square`, `Heart`, `Oblong/Rectangle`).
+* **JWT User Authentication:** Secure user registration, sign-in, and persistent session state with hashed passwords (`bcryptjs`).
+* **Scan History & Feedback Loop:** Persistent tracking of user facial scan histories with interactive like/dislike feedback ratings and comments.
+* **Containerized Deployment:** Docker Compose orchestration combining MongoDB, Node/Express backend, and Vite React frontend.
+
+---
+
+## 🛠️ Tech Stack & System Architecture
+
 ```text
-[Image Input] ───> [Facial Landmark Classifier] ───> [Face Shape Evaluator] ───> [Style Matrix]
+[Browser Upload] ───> [face-api.js (Landmarks)] ───> [POST /api/scans] ───> [MongoDB Catalog Query]
+                                                                                │
+                                                                                ▼
+[Scan History & Feedback] <─── [Auth Context & JWT] <─── [Express API] <─── [Hairstyle Match Matrix]
 ```
-* **Core Language:** Python / JavaScript
-* **Vision & Processing Frameworks:** OpenCV, MediaPipe / Face Landmarks Engine
-* **UI Infrastructure:** Interactive Web Preview Matrix
 
-## 📦 Quick Installation
+### Frontend
+- **Framework:** React 19 + Vite
+- **Styling:** Vanilla CSS + Tailwind CSS v4 & Lucide Icons
+- **Biometrics:** `@vladmandic/face-api` (TensorFlow.js WebGL backend)
 
-1. **Clone and Navigate:**
+### Backend
+- **Runtime:** Node.js & Express (TypeScript)
+- **Database:** MongoDB & Mongoose ORM
+- **Authentication:** JWT (JSON Web Tokens) & `bcryptjs`
+- **Uploads:** Multer with Cloudinary & Local Storage fallback
+- **Security:** `cors`, `morgan`, `express-rate-limit`
+
+---
+
+## 📦 Quick Start & Local Execution
+
+### Option A: Local Development (Node.js & MongoDB)
+
+1. **Clone the Repository:**
    ```bash
-   git clone https://github.com
+   git clone https://github.com/vibhavjain03/hairstyle-recommendation-system.git
    cd hairstyle-recommendation-system
    ```
 
-2. **Install Local Project Modules:**
+2. **Start Backend Server:**
    ```bash
+   cd server
    npm install
+   npm run seed    # Seed database with 20 curated hairstyles
+   npm run dev     # Runs Express backend on http://localhost:5000
    ```
 
-3. **Launch the Engine:**
+3. **Start Frontend App:**
+   In a second terminal window at the project root:
    ```bash
-   npm run dev
+   npm install
+   npm run dev     # Runs Vite React frontend on http://localhost:5173
    ```
+
+### Option B: One-Command Docker Compose Deployment
+
+Run the complete multi-container stack (MongoDB + Express Backend + Vite Nginx Frontend) with:
+```bash
+docker-compose up --build
+```
+Access the application at `http://localhost`.
+
+---
+
+## 📄 License
+MIT License.

@@ -1,14 +1,18 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as faceapi from '@vladmandic/face-api';
 import { getRecommendations } from '../utils/geometry';
-import { Activity, Scissors, UserCheck, Droplet, RefreshCw, Sparkles, Copy, X } from 'lucide-react';
+import { Activity, Scissors, UserCheck, Droplet, RefreshCw, Sparkles, Copy, X, ThumbsUp, ThumbsDown } from 'lucide-react';
 import { clsx } from 'clsx';
+import { api } from '../services/api';
 
-export const ResultsDash = ({ imageUrl, results, detection, onReset }) => {
+export const ResultsDash = ({ imageUrl, results, detection, backendData, onReset }) => {
   const imageRef = useRef(null);
   const canvasRef = useRef(null);
   const [previewStyle, setPreviewStyle] = useState(null);
   const [copied, setCopied] = useState(false);
+  
+  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
+  const [liked, setLiked] = useState(null);
 
   useEffect(() => {
     if (imageRef.current && canvasRef.current && detection) {
@@ -25,14 +29,32 @@ export const ResultsDash = ({ imageUrl, results, detection, onReset }) => {
     }
   }, [detection, imageUrl]);
 
-  const recs = getRecommendations(results.shape);
+  // Use database recommendations from backend if available, fallback to static geometry calculation
+  const staticRecs = getRecommendations(results.shape);
+  const stylesList = backendData?.styles || staticRecs.styles;
+  const groomingTip = backendData?.groomingTips || staticRecs.grooming;
+  const hairstylesFull = backendData?.hairstylesFull || [];
 
-  const generatePrompt = (style) => {
+  const handleFeedback = async (isLiked) => {
+    if (!backendData?.recommendation?._id) return;
+    try {
+      setLiked(isLiked);
+      await api.submitFeedback({
+        recommendationId: backendData.recommendation._id,
+        liked: isLiked
+      });
+      setFeedbackSubmitted(true);
+    } catch (err) {
+      console.error('Failed to submit feedback:', err);
+    }
+  };
+
+  const generatePrompt = (styleName) => {
     return `Create a photorealistic hairstyle transformation of the uploaded person.
 
 Keep the exact same identity, facial features, skin tone, eye color, face proportions, age, expression, and facial structure.
 
-Apply: ${style}
+Apply: ${styleName}
 
 Detected face shape: ${results.shape}
 
@@ -68,7 +90,7 @@ Result should look like an authentic photograph of the same person after receivi
         
         {/* Left Column: Image Overlay */}
         <div className="w-full md:w-1/2 flex flex-col items-center">
-          <div className="relative rounded-2xl overflow-hidden border border-gray-700 bg-gray-900 shadow-2xl">
+          <div className="relative rounded-2xl overflow-hidden border border-gray-700 bg-gray-900 shadow-2xl w-full">
             <img 
               ref={imageRef} 
               src={imageUrl} 
@@ -86,7 +108,7 @@ Result should look like an authentic photograph of the same person after receivi
           
           <button 
             onClick={onReset}
-            className="mt-6 flex items-center px-6 py-3 bg-gray-800 hover:bg-gray-700 text-white rounded-full font-medium transition-colors border border-gray-600"
+            className="mt-6 flex items-center px-6 py-3 bg-gray-800 hover:bg-gray-700 text-white rounded-full font-medium transition-colors border border-gray-600 shadow-lg"
           >
             <RefreshCw className="w-4 h-4 mr-2" />
             Analyze Another Photo
@@ -106,7 +128,7 @@ Result should look like an authentic photograph of the same person after receivi
             </div>
             <div className="flex items-center text-sm text-gray-300 bg-gray-800/50 inline-flex px-4 py-2 rounded-full border border-gray-700">
               <Activity className="w-4 h-4 mr-2 text-primary" />
-              Symmetry Score: {(100 - Math.random() * 15).toFixed(1)}%
+              Database Matched Engine
             </div>
           </div>
 
@@ -120,30 +142,81 @@ Result should look like an authentic photograph of the same person after receivi
           <div className="bg-gray-900/60 backdrop-blur-md border border-gray-800 rounded-3xl p-8 shadow-xl mt-2">
             <h3 className="text-xl font-semibold text-white mb-6 flex items-center">
               <Scissors className="w-5 h-5 mr-3 text-accent" />
-              Optimal Hairstyles
+              Optimal Hairstyles (MongoDB Catalog)
             </h3>
+            
             <div className="flex flex-col gap-3 mb-8">
-              {recs.styles.map((style, idx) => (
-                <div key={idx} className="flex items-center justify-between p-3 rounded-xl bg-gray-800/50 border border-gray-700 hover:border-accent/50 transition-colors">
-                  <span className="font-medium text-white">{style}</span>
-                  <button 
-                    onClick={() => setPreviewStyle(style)}
-                    className="flex items-center text-xs font-medium px-3 py-1.5 bg-accent/20 text-accent hover:bg-accent/30 rounded-lg transition-colors"
-                  >
-                    <Sparkles className="w-3 h-3 mr-1.5" />
-                    AI Preview
-                  </button>
-                </div>
-              ))}
+              {stylesList.map((styleName, idx) => {
+                const fullItem = hairstylesFull.find((h) => h.hairstyle?.name === styleName)?.hairstyle;
+
+                return (
+                  <div key={idx} className="p-3.5 rounded-2xl bg-gray-800/40 border border-gray-700/80 hover:border-accent/50 transition-all flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      {fullItem?.imageUrl ? (
+                        <img src={fullItem.imageUrl} alt={styleName} className="w-12 h-12 rounded-xl object-cover border border-gray-700" />
+                      ) : (
+                        <div className="w-10 h-10 rounded-xl bg-accent/20 border border-accent/30 flex items-center justify-center text-accent font-bold">
+                          {idx + 1}
+                        </div>
+                      )}
+                      <div>
+                        <div className="font-semibold text-white text-sm">{styleName}</div>
+                        {fullItem?.description && (
+                          <div className="text-xs text-gray-400 line-clamp-1">{fullItem.description}</div>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <button 
+                      onClick={() => setPreviewStyle(styleName)}
+                      className="flex items-center text-xs font-medium px-3 py-1.5 bg-accent/20 text-accent hover:bg-accent/30 rounded-xl transition-colors shrink-0"
+                    >
+                      <Sparkles className="w-3.5 h-3.5 mr-1" />
+                      AI Preview
+                    </button>
+                  </div>
+                );
+              })}
             </div>
             
-            <h3 className="text-xl font-semibold text-white mb-4 flex items-center">
+            <h3 className="text-xl font-semibold text-white mb-3 flex items-center">
               <Droplet className="w-5 h-5 mr-3 text-primary" />
-              Grooming Tips
+              Grooming Advice
             </h3>
-            <p className="text-gray-300 leading-relaxed text-sm">
-              {recs.grooming}
+            <p className="text-gray-300 leading-relaxed text-sm bg-gray-950/40 p-4 rounded-2xl border border-gray-800 mb-6">
+              {groomingTip}
             </p>
+
+            {/* Quick Feedback Bar */}
+            {backendData?.recommendation?._id && (
+              <div className="pt-4 border-t border-gray-800 flex items-center justify-between">
+                <span className="text-xs text-gray-400 font-medium">Rate these recommendations:</span>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handleFeedback(true)}
+                    className={`p-2 rounded-xl border text-xs font-medium flex items-center gap-1.5 transition-colors ${
+                      liked === true
+                        ? 'bg-green-500/20 text-green-400 border-green-500/30'
+                        : 'bg-gray-800 text-gray-400 hover:text-white border-gray-700'
+                    }`}
+                  >
+                    <ThumbsUp className="w-4 h-4" />
+                    <span>Like</span>
+                  </button>
+                  <button
+                    onClick={() => handleFeedback(false)}
+                    className={`p-2 rounded-xl border text-xs font-medium flex items-center gap-1.5 transition-colors ${
+                      liked === false
+                        ? 'bg-red-500/20 text-red-400 border-red-500/30'
+                        : 'bg-gray-800 text-gray-400 hover:text-white border-gray-700'
+                    }`}
+                  >
+                    <ThumbsDown className="w-4 h-4" />
+                    <span>Dislike</span>
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
           
         </div>
@@ -181,12 +254,10 @@ Result should look like an authentic photograph of the same person after receivi
                     "absolute top-4 right-4 flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200",
                     copied 
                       ? "bg-green-500/20 text-green-400 border border-green-500/30" 
-                      : "bg-gray-800 text-white hover:bg-gray-700 border border-gray-700 opacity-0 group-hover:opacity-100"
+                      : "bg-gray-800 text-white hover:bg-gray-700 border border-gray-700"
                   )}
                 >
-                  {copied ? (
-                    'Copied!'
-                  ) : (
+                  {copied ? 'Copied!' : (
                     <>
                       <Copy className="w-4 h-4 mr-2" />
                       Copy Prompt
